@@ -1,9 +1,18 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+};
 
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -18,11 +27,16 @@ export const register = async (req, res) => {
       password: hashedPassword
     });
 
+    const token = generateToken(user._id);
+
     res.status(201).json({
       message: "User registered successfully",
-      userId: user._id
+      token,
+      userId: user._id,
+      name: user.name
     });
   } catch (error) {
+    console.error("Register error:", error);
     res.status(500).json({ message: "Registration failed" });
   }
 };
@@ -30,6 +44,10 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -41,11 +59,16 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    const token = generateToken(user._id);
+
     res.json({
       message: "Login successful",
-      userId: user._id
+      token,
+      userId: user._id,
+      name: user.name
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: "Login failed" });
   }
 };

@@ -8,6 +8,6 @@ const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
 // POST /api/verify
-router.post("/verify", upload.single("file"), verifyMedia);
+router.post("/", upload.single("file"), verifyMedia);
 
 export default router;

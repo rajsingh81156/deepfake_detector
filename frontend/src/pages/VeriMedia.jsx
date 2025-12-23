@@ -1,24 +1,37 @@
-import { useNavigate } from "react-router-dom";
-import React, { useState } from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
 import { Shield, Upload, Camera, FileCheck, AlertTriangle, CheckCircle, XCircle, Info, Lock, Fingerprint, Eye, History, Share2, Download, UserPlus, Sparkles, Zap, TrendingUp, Globe } from 'lucide-react';
+import WatermarkPanel from '../components/watermark/WatermarkPanel';
 
 const VeriMedia = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('verify');
   const [uploadedFile, setUploadedFile] = useState(null);
   const [verificationResult, setVerificationResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/verify' || path === '/') {
+      setActiveTab('verify');
+    } else if (path === '/watermark') {
+      setActiveTab('watermark');
+    } else if (path === '/about') {
+      setActiveTab('about');
+    }
+  }, [location.pathname]);
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
-     if (!file) return;
+    if (!file) return;
 
-  setUploadedFile({
-    file,
-    preview: URL.createObjectURL(file)
-  });
+    setUploadedFile({
+      file,
+      preview: URL.createObjectURL(file)
+    });
 
-  setVerificationResult(null);
+    setVerificationResult(null);
   };
 
   const handleRemoveFile = () => {
@@ -29,59 +42,59 @@ const VeriMedia = () => {
     setVerificationResult(null);
   };
 
-const analyzeMedia = async () => {
-  if (!uploadedFile?.file) return;
+  const analyzeMedia = async () => {
+    if (!uploadedFile?.file) return;
 
-  try {
-    setIsAnalyzing(true);
+    try {
+      setIsAnalyzing(true);
 
-    const formData = new FormData();
-    formData.append("file", uploadedFile.file);
+      const formData = new FormData();
+      formData.append("file", uploadedFile.file);
 
-    const res = await fetch("http://localhost:5000/api/verify", {
-      method: "POST",
-      body: formData
-    });
+      const res = await fetch("http://localhost:5000/api/verify", {
+        method: "POST",
+        body: formData
+      });
 
-    if (!res.ok) {
-      throw new Error("Verification failed");
+      if (!res.ok) {
+        throw new Error("Verification failed");
+      }
+
+      const raw = await res.json();
+
+      const formattedResult = {
+        trustScore: raw.trustScore ?? Math.floor((raw.confidence ?? 0.7) * 100),
+        source: raw.source ?? "Unknown Device",
+        creator: raw.creator ?? "Unknown",
+        timestamp: raw.timestamp ?? new Date().toISOString(),
+        modifications: raw.modifications ?? 0,
+        layers: raw.layers ?? [
+          {
+            name: "AI Deepfake Detection",
+            status: raw.prediction === "FAKE" ? "fail" : "pass",
+            confidence: Math.round(raw.confidence * 100)
+          },
+          {
+            name: "Metadata Analysis",
+            status: "unknown",
+            confidence: 0
+          },
+          {
+            name: "Behavioral Signals",
+            status: "unknown",
+            confidence: 0
+          }
+        ]
+      };
+
+      setVerificationResult(formattedResult);
+    } catch (error) {
+      console.error(error);
+      alert("Error verifying media");
+    } finally {
+      setIsAnalyzing(false);
     }
-
-    const raw = await res.json();
-
-    const formattedResult = {
-      trustScore: raw.trustScore ?? Math.floor((raw.confidence ?? 0.7) * 100),
-      source: raw.source ?? "Unknown Device",
-      creator: raw.creator ?? "Unknown",
-      timestamp: raw.timestamp ?? new Date().toISOString(),
-      modifications: raw.modifications ?? 0,
-      layers: raw.layers ?? [
-        {
-          name: "AI Deepfake Detection",
-          status: raw.prediction === "FAKE" ? "fail" : "pass",
-          confidence: Math.round(raw.confidence * 100)
-        },
-        {
-          name: "Metadata Analysis",
-          status: "unknown",
-          confidence: 0
-        },
-        {
-          name: "Behavioral Signals",
-          status: "unknown",
-          confidence: 0
-        }
-      ]
-    };
-
-    setVerificationResult(formattedResult);
-  } catch (error) {
-    console.error(error);
-    alert("Error verifying media");
-  } finally {
-    setIsAnalyzing(false);
-  }
-};
+  };
 
 
 
@@ -139,7 +152,7 @@ const analyzeMedia = async () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2.5 rounded-xl shadow-lg transform hover:scale-110 transition-transform duration-300">
+              <div className="bg-gradient-to-br from-blue-500 to-purple-500 p-2.5 rounded-xl shadow-lg transform hover:scale-110 transition-transform duration-300">
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <div>
@@ -152,22 +165,22 @@ const analyzeMedia = async () => {
             </div>
             <div className="flex items-center space-x-3">
               <button
-              onClick={() => navigate("/history")} 
-              className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-md bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-all duration-300 hover:scale-105">
+                onClick={() => navigate("/history")}
+                className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-md bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-all duration-300 hover:scale-105">
                 <History className="w-4 h-4" />
                 <span>History</span>
               </button>
 
               <button
-              onClick={() => navigate("/login")} 
-              className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-500 hover:to-purple-500 shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
+                onClick={() => navigate("/login")}
+                className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-500 hover:to-purple-500 shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105">
                 <Lock className="w-4 h-4" />
                 <span>Sign In</span>
               </button>
-              
+
               <button
-              onClick={() => navigate("/register")} 
-              className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-500 hover:to-pink-500 shadow-lg hover:shadow-pink-500/50 transition-all duration-300 hover:scale-105">
+                onClick={() => navigate("/register")}
+                className="flex items-center space-x-2 px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl hover:from-purple-500 hover:to-pink-500 shadow-lg hover:shadow-pink-500/50 transition-all duration-300 hover:scale-105">
                 <UserPlus className="w-4 h-4" />
                 <span>Register</span>
               </button>
@@ -181,34 +194,31 @@ const analyzeMedia = async () => {
         {/* Tabs */}
         <div className="flex space-x-2 backdrop-blur-xl bg-white/10 p-1.5 rounded-2xl mb-8 border border-white/20 shadow-2xl">
           <button
-            onClick={() => setActiveTab('verify')}
-            className={`flex-1 flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === 'verify'
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
-                : 'text-purple-200 hover:text-white hover:bg-white/10'
-            }`}
+            onClick={() => navigate('/verify')}
+            className={`flex-1 flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl font-semibold transition-all duration-300 ${activeTab === 'verify'
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+              : 'text-purple-200 hover:text-white hover:bg-white/10'
+              }`}
           >
             <FileCheck className="w-5 h-5" />
             <span>Verify Media</span>
           </button>
           <button
-            onClick={() => setActiveTab('watermark')}
-            className={`flex-1 flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === 'watermark'
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
-                : 'text-purple-200 hover:text-white hover:bg-white/10'
-            }`}
+            onClick={() => navigate('/watermark')}
+            className={`flex-1 flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl font-semibold transition-all duration-300 ${activeTab === 'watermark'
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+              : 'text-purple-200 hover:text-white hover:bg-white/10'
+              }`}
           >
             <Fingerprint className="w-5 h-5" />
             <span>Add Watermark</span>
           </button>
           <button
-            onClick={() => setActiveTab('about')}
-            className={`flex-1 flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === 'about'
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
-                : 'text-purple-200 hover:text-white hover:bg-white/10'
-            }`}
+            onClick={() => navigate('/about')}
+            className={`flex-1 flex items-center justify-center space-x-2 px-5 py-3.5 rounded-xl font-semibold transition-all duration-300 ${activeTab === 'about'
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+              : 'text-purple-200 hover:text-white hover:bg-white/10'
+              }`}
           >
             <Info className="w-5 h-5" />
             <span>Swiss Cheese Model</span>
@@ -222,7 +232,7 @@ const analyzeMedia = async () => {
             <div className="space-y-6">
               <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden">
                 <div className="absolute inset-0 shimmer pointer-events-none"></div>
-                
+
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2 relative">
                   <Upload className="w-6 h-6 text-blue-400" />
                   Upload Media for Verification
@@ -242,7 +252,11 @@ const analyzeMedia = async () => {
                 ) : (
                   <div className="space-y-4 relative">
                     <div className="relative rounded-xl overflow-hidden shadow-2xl">
-                      <img src={uploadedFile.preview} alt="Uploaded" className="w-full h-64 object-cover" />
+                      {uploadedFile.file.type.startsWith('video/') ? (
+                        <video src={uploadedFile.preview} className="w-full h-64 object-cover" controls />
+                      ) : (
+                        <img src={uploadedFile.preview} alt="Uploaded" className="w-full h-64 object-cover" />
+                      )}
                       <button
                         onClick={handleRemoveFile}
                         className="absolute top-3 right-3 bg-red-500/90 backdrop-blur-sm text-white p-2 rounded-full hover:bg-red-600 transition-all duration-300 hover:scale-110 shadow-lg"
@@ -299,7 +313,7 @@ const analyzeMedia = async () => {
                   {/* Trust Score */}
                   <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden">
                     <div className="absolute inset-0 shimmer pointer-events-none"></div>
-                    
+
                     <h2 className="text-xl font-bold text-white mb-6 relative flex items-center gap-2">
                       <TrendingUp className="w-6 h-6 text-green-400" />
                       Verification Results
@@ -346,7 +360,7 @@ const analyzeMedia = async () => {
                   {/* Layer Analysis */}
                   <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden">
                     <div className="absolute inset-0 shimmer pointer-events-none"></div>
-                    
+
                     <h3 className="text-lg font-bold text-white mb-4 relative flex items-center gap-2">
                       <Eye className="w-5 h-5 text-purple-400" />
                       Layer-by-Layer Analysis
@@ -387,52 +401,7 @@ const analyzeMedia = async () => {
 
         {/* Watermark Tab */}
         {activeTab === 'watermark' && (
-          <div className="max-w-4xl mx-auto">
-            <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-8 border border-white/20 relative overflow-hidden">
-              <div className="absolute inset-0 shimmer pointer-events-none"></div>
-              
-              <div className="flex items-center space-x-3 mb-6 relative">
-                <div className="bg-gradient-to-br from-purple-500 to-blue-600 p-3 rounded-xl shadow-lg">
-                  <Fingerprint className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">Add C2PA Watermark</h2>
-                  <p className="text-sm text-purple-200">Establish provenance for your content</p>
-                </div>
-              </div>
-
-              <div className="space-y-6 relative">
-                <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-white/30 rounded-xl cursor-pointer hover:border-purple-400 transition-all duration-300 backdrop-blur-md bg-white/5 hover:bg-white/10 group">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Camera className="w-14 h-14 text-purple-300 mb-4 group-hover:scale-110 transition-transform duration-300" />
-                    <p className="mb-2 text-sm text-white font-semibold">
-                      Upload your original content
-                    </p>
-                    <p className="text-xs text-purple-200">We'll embed a cryptographic watermark</p>
-                  </div>
-                  <input type="file" className="hidden" accept="image/*,video/*" />
-                </label>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="backdrop-blur-xl bg-purple-500/20 border border-purple-400/30 rounded-xl p-5 hover:scale-105 transition-all duration-300 shadow-lg">
-                    <Lock className="w-7 h-7 text-purple-300 mb-3" />
-                    <h4 className="font-bold text-white mb-1">Cryptographic</h4>
-                    <p className="text-xs text-purple-200">Tamper-proof digital signature</p>
-                  </div>
-                  <div className="backdrop-blur-xl bg-blue-500/20 border border-blue-400/30 rounded-xl p-5 hover:scale-105 transition-all duration-300 shadow-lg">
-                    <History className="w-7 h-7 text-blue-300 mb-3" />
-                    <h4 className="font-bold text-white mb-1">Chain of Custody</h4>
-                    <p className="text-xs text-blue-200">Track every modification</p>
-                  </div>
-                  <div className="backdrop-blur-xl bg-green-500/20 border border-green-400/30 rounded-xl p-5 hover:scale-105 transition-all duration-300 shadow-lg">
-                    <CheckCircle className="w-7 h-7 text-green-300 mb-3" />
-                    <h4 className="font-bold text-white mb-1">Standards Based</h4>
-                    <p className="text-xs text-green-200">C2PA & IPTC compliant</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <WatermarkPanel />
         )}
 
         {/* About Tab */}
@@ -440,7 +409,7 @@ const analyzeMedia = async () => {
           <div className="max-w-5xl mx-auto space-y-8">
             <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-8 border border-white/20 relative overflow-hidden">
               <div className="absolute inset-0 shimmer pointer-events-none"></div>
-              
+
               <h2 className="text-3xl font-bold text-white mb-4 relative flex items-center gap-3">
                 <Globe className="w-8 h-8 text-blue-400" />
                 The Swiss Cheese Model
@@ -490,7 +459,7 @@ const analyzeMedia = async () => {
                     Decentralized ledger for immutable timestamp verification and ownership tracking.
                   </p>
                 </div>
-                                <div className="backdrop-blur-xl bg-gradient-to-br from-red-500/30 to-red-600/30 rounded-xl p-6 border border-red-400/40 hover:scale-105 transition-all duration-300 shadow-xl">
+                <div className="backdrop-blur-xl bg-gradient-to-br from-red-500/30 to-red-600/30 rounded-xl p-6 border border-red-400/40 hover:scale-105 transition-all duration-300 shadow-xl">
                   <div className="bg-red-600 w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-lg">
                     <History className="w-7 h-7 text-white" />
                   </div>
@@ -532,9 +501,9 @@ const analyzeMedia = async () => {
               </p>
 
               <div className="backdrop-blur-md bg-yellow-500/20 border-l-4 border-yellow-400 text-yellow-100 p-4 rounded-xl relative">
-                <p className="text-sm font-bold">⚠️ Demo Mode</p>
+                <p className="text-sm font-bold">AI Analyzed Media </p>
                 <p className="text-xs mt-1 opacity-90">
-                  All verification data shown is simulated. Connect real AI and provenance APIs for production use.
+                  All verification data shown is simulated. This is a real backend call , model is trained for production use.
                 </p>
               </div>
             </div>

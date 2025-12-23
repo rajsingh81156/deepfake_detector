@@ -1,24 +1,26 @@
 import { FileCheck, Fingerprint, Info } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
-export default function Tabs({ active, setActive }) {
+export default function Tabs() {
   const tabs = [
-    { id: "verify", label: "Verify Media", icon: FileCheck },
-    { id: "watermark", label: "Add Watermark", icon: Fingerprint },
-    { id: "about", label: "Swiss Cheese Model", icon: Info }
+    { id: "verify", label: "Verify Media", icon: FileCheck, path: "/verify" },
+    { id: "watermark", label: "Add Watermark", icon: Fingerprint, path: "/watermark" },
+    { id: "about", label: "Swiss Cheese Model", icon: Info, path: "/about" }
   ];
 
   return (
     <div className="flex bg-gray-100 p-1 rounded-lg mb-8">
-      {tabs.map(({ id, label, icon: Icon }) => (
-        <button
-          key={id}
-          onClick={() => setActive(id)}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded ${
-            active === id ? "bg-white shadow text-blue-600" : "text-gray-600"
-          }`}
+      {tabs.map((tab) => (
+        <NavLink
+          key={tab.id}
+          to={tab.path}
+          className={({ isActive }) =>
+            `flex-1 flex items-center justify-center gap-2 py-3 rounded ${isActive ? "bg-white shadow text-blue-600" : "text-gray-600"
+            }`
+          }
         >
-          <Icon className="w-5 h-5" /> {label}
-        </button>
+          <tab.icon className="w-5 h-5" /> {tab.label}
+        </NavLink>
       ))}
     </div>
   );

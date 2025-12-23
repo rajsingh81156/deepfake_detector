@@ -11,6 +11,12 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [particles] = useState(() => [...Array(20)].map(() => ({
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    animation: `float ${5 + Math.random() * 10}s ease-in-out infinite`,
+    animationDelay: `${Math.random() * 5}s`
+  })));
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
@@ -24,40 +30,40 @@ export default function Register() {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.name) {
       newErrors.name = "Name is required";
     } else if (formData.name.length < 2) {
       newErrors.name = "Name must be at least 2 characters";
     }
-    
+
     if (!formData.email) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
-    
+
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
     }
-    
+
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-    
+
     setTimeout(() => {
       setIsLoading(false);
       alert("Account created successfully! Welcome, " + formData.name);
@@ -97,21 +103,16 @@ export default function Register() {
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 right-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute top-40 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute -bottom-32 left-1/2 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-40 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute -bottom-32 left-1/2 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
       {/* Floating Particles */}
-      {[...Array(20)].map((_, i) => (
+      {particles.map((particle, i) => (
         <div
           key={i}
           className="absolute w-1 h-1 bg-white rounded-full opacity-30"
-          style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animation: `float ${5 + Math.random() * 10}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 5}s`
-          }}
+          style={particle}
         />
       ))}
 
@@ -119,7 +120,7 @@ export default function Register() {
 
       <div className="relative min-h-screen flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          
+
           {/* Logo/Brand Section */}
           <div className="text-center mb-8 animate-fade-in">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl shadow-2xl mb-4 transform hover:scale-110 transition-transform duration-300">
@@ -134,10 +135,21 @@ export default function Register() {
 
           {/* Glass Morphism Card */}
           <div className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden">
-            
+
             {/* Shimmer Effect */}
             <div className="absolute inset-0 shimmer pointer-events-none"></div>
-
+            {/* Back to Home Link */}
+            <button
+              onClick={() => navigate("/")}
+              className="text-purple-200 hover:text-white transition-colors text-sm font-medium mb-6 cursor-pointer hover:underline"
+            >
+              <span
+                className="text-lg font-bold"
+              >
+                ←
+              </span>
+              Back to Home
+            </button>
             {/* Header */}
             <div className="text-center mb-8 relative">
               <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
@@ -151,11 +163,11 @@ export default function Register() {
               <label className="text-sm font-semibold text-white mb-2 block">Full Name</label>
               <div className={`relative group`}>
                 <div className={`flex items-center gap-3 backdrop-blur-md bg-white/10 rounded-xl px-4 py-3.5 border-2 transition-all duration-300
-                                ${errors.name 
-                                  ? 'border-red-500 bg-red-500/10' 
-                                  : focusedField === 'name'
-                                    ? 'border-purple-400 bg-white/20 shadow-lg shadow-purple-500/50'
-                                    : 'border-white/30 hover:border-white/50'}`}>
+                                ${errors.name
+                    ? 'border-red-500 bg-red-500/10'
+                    : focusedField === 'name'
+                      ? 'border-purple-400 bg-white/20 shadow-lg shadow-purple-500/50'
+                      : 'border-white/30 hover:border-white/50'}`}>
                   <User className={`w-5 h-5 transition-colors ${errors.name ? 'text-red-400' : 'text-purple-300'}`} />
                   <input
                     type="text"
@@ -182,11 +194,11 @@ export default function Register() {
               <label className="text-sm font-semibold text-white mb-2 block">Email Address</label>
               <div className={`relative group`}>
                 <div className={`flex items-center gap-3 backdrop-blur-md bg-white/10 rounded-xl px-4 py-3.5 border-2 transition-all duration-300
-                                ${errors.email 
-                                  ? 'border-red-500 bg-red-500/10' 
-                                  : focusedField === 'email'
-                                    ? 'border-blue-400 bg-white/20 shadow-lg shadow-blue-500/50'
-                                    : 'border-white/30 hover:border-white/50'}`}>
+                                ${errors.email
+                    ? 'border-red-500 bg-red-500/10'
+                    : focusedField === 'email'
+                      ? 'border-blue-400 bg-white/20 shadow-lg shadow-blue-500/50'
+                      : 'border-white/30 hover:border-white/50'}`}>
                   <Mail className={`w-5 h-5 transition-colors ${errors.email ? 'text-red-400' : 'text-purple-300'}`} />
                   <input
                     type="email"
@@ -213,11 +225,11 @@ export default function Register() {
               <label className="text-sm font-semibold text-white mb-2 block">Password</label>
               <div className={`relative group`}>
                 <div className={`flex items-center gap-3 backdrop-blur-md bg-white/10 rounded-xl px-4 py-3.5 border-2 transition-all duration-300
-                                ${errors.password 
-                                  ? 'border-red-500 bg-red-500/10' 
-                                  : focusedField === 'password'
-                                    ? 'border-purple-400 bg-white/20 shadow-lg shadow-purple-500/50'
-                                    : 'border-white/30 hover:border-white/50'}`}>
+                                ${errors.password
+                    ? 'border-red-500 bg-red-500/10'
+                    : focusedField === 'password'
+                      ? 'border-purple-400 bg-white/20 shadow-lg shadow-purple-500/50'
+                      : 'border-white/30 hover:border-white/50'}`}>
                   <Lock className={`w-5 h-5 transition-colors ${errors.password ? 'text-red-400' : 'text-purple-300'}`} />
                   <input
                     type={showPassword ? "text" : "password"}
@@ -248,9 +260,8 @@ export default function Register() {
                       {[...Array(5)].map((_, i) => (
                         <div
                           key={i}
-                          className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                            i < passwordStrength ? getStrengthColor() : 'bg-white/20'
-                          }`}
+                          className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i < passwordStrength ? getStrengthColor() : 'bg-white/20'
+                            }`}
                         />
                       ))}
                     </div>
@@ -270,11 +281,11 @@ export default function Register() {
               <label className="text-sm font-semibold text-white mb-2 block">Confirm Password</label>
               <div className={`relative group`}>
                 <div className={`flex items-center gap-3 backdrop-blur-md bg-white/10 rounded-xl px-4 py-3.5 border-2 transition-all duration-300
-                                ${errors.confirmPassword 
-                                  ? 'border-red-500 bg-red-500/10' 
-                                  : focusedField === 'confirmPassword'
-                                    ? 'border-purple-400 bg-white/20 shadow-lg shadow-purple-500/50'
-                                    : 'border-white/30 hover:border-white/50'}`}>
+                                ${errors.confirmPassword
+                    ? 'border-red-500 bg-red-500/10'
+                    : focusedField === 'confirmPassword'
+                      ? 'border-purple-400 bg-white/20 shadow-lg shadow-purple-500/50'
+                      : 'border-white/30 hover:border-white/50'}`}>
                   <Shield className={`w-5 h-5 transition-colors ${errors.confirmPassword ? 'text-red-400' : 'text-purple-300'}`} />
                   <input
                     type={showConfirmPassword ? "text" : "password"}
