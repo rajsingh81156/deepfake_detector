@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 import torch
@@ -10,6 +11,15 @@ from model.preprocess import preprocess_image
 # App init
 # ----------------------------
 app = FastAPI(title="VeriMedia AI Service")
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -23,15 +33,33 @@ model.eval()  # ✅ VERY IMPORTANT
 # ----------------------------
 # Routes
 # ----------------------------
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "model_loaded": True}
+
 @app.post("/analyze")
 async def analyze(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
 
-    # Save uploaded file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Validate file extension
+    allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp'}
+    file_ext = os.path.splitext(file.filename.lower())[1]
+
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Invalid file type. Only images are allowed.")
+
+    file_path = os.path.join(UPLOAD_DIR, f"{os.urandom(16).hex()}{file_ext}")
 
     try:
+        # Save uploaded file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Check file size (max 10MB)
+        if os.path.getsize(file_path) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB.")
+
         # Preprocess
         image_tensor = preprocess_image(file_path, DEVICE)
 
@@ -58,6 +86,9 @@ async def analyze(file: UploadFile = File(...)):
                 }
             ]
         }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
     finally:
         # ✅ Cleanup file

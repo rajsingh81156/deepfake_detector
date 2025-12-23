@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7-jammy
+    container_name: verimedia-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: verimedia
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - verimedia-network
+
+  # AI Service
+  ai-service:
+    build: ./ai-service
+    container_name: verimedia-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-service/model:/app/model:ro
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - mongodb
+    networks:
+      - verimedia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: verimedia-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017/verimedia
+      - JWT_SECRET=your_secure_jwt_secret_here
+      - AI_SERVICE_URL=http://ai-service:8000/analyze
+      - FRONTEND_URL=http://localhost:5173
+    depends_on:
+      - mongodb
+      - ai-service
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - verimedia-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    container_name: verimedia-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - verimedia-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  verimedia-network:
+    driver: bridge
