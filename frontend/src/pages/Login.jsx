@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Sparkles, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 export default function Login() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -8,12 +9,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
-  const [particles] = useState(() => [...Array(20)].map(() => ({
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    animation: `float ${5 + Math.random() * 10}s ease-in-out infinite`,
-    animationDelay: `${Math.random() * 5}s`
-  })));
 
   const validateForm = () => {
     const newErrors = {};
@@ -67,20 +62,7 @@ export default function Login() {
         <div className="absolute -bottom-32 left-1/2 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      {/* Floating Particles */}
-      {particles.map((particle, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-white rounded-full opacity-30"
-          style={particle}
-        />
-      ))}
-
       <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
           25% { transform: translateX(-5px); }
@@ -88,14 +70,6 @@ export default function Login() {
         }
         .animate-shake {
           animation: shake 0.3s ease-in-out;
-        }
-        .shimmer {
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-          animation: shimmer 3s infinite;
-        }
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
         }
       `}</style>
 
@@ -116,9 +90,6 @@ export default function Login() {
 
           {/* Glass Morphism Card */}
           <div className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden">
-
-            {/* Shimmer Effect */}
-            <div className="absolute inset-0 shimmer pointer-events-none"></div>
 
             {/* Back to Home Link */}
             <button

@@ -145,8 +145,6 @@ const VeriMedia = () => {
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
 
-
-
       {/* Header */}
       <header className="relative backdrop-blur-xl bg-white/10 border-b border-white/20 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -231,8 +229,6 @@ const VeriMedia = () => {
             {/* Upload Section */}
             <div className="space-y-6">
               <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden">
-                <div className="absolute inset-0 shimmer pointer-events-none"></div>
-
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2 relative">
                   <Upload className="w-6 h-6 text-blue-400" />
                   Upload Media for Verification
@@ -294,7 +290,7 @@ const VeriMedia = () => {
                     <Shield className="w-5 h-5 text-blue-300" />
                     <h3 className="font-bold text-white">Multi-Layer</h3>
                   </div>
-                  <p className="text-sm text-blue-200">6+ verification layers for maximum accuracy</p>
+                  <p className="text-sm text-blue-200">6 verification layers for maximum accuracy</p>
                 </div>
                 <div className="backdrop-blur-xl bg-purple-500/20 border border-purple-400/30 rounded-xl p-4 hover:scale-105 transition-transform duration-300 shadow-lg">
                   <div className="flex items-center space-x-2 mb-2">
@@ -312,8 +308,6 @@ const VeriMedia = () => {
                 <>
                   {/* Trust Score */}
                   <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden">
-                    <div className="absolute inset-0 shimmer pointer-events-none"></div>
-
                     <h2 className="text-xl font-bold text-white mb-6 relative flex items-center gap-2">
                       <TrendingUp className="w-6 h-6 text-green-400" />
                       Verification Results
@@ -359,8 +353,6 @@ const VeriMedia = () => {
 
                   {/* Layer Analysis */}
                   <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden">
-                    <div className="absolute inset-0 shimmer pointer-events-none"></div>
-
                     <h3 className="text-lg font-bold text-white mb-4 relative flex items-center gap-2">
                       <Eye className="w-5 h-5 text-purple-400" />
                       Layer-by-Layer Analysis
@@ -387,7 +379,6 @@ const VeriMedia = () => {
                 </>
               ) : (
                 <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-12 border border-white/20 flex flex-col items-center justify-center h-full relative overflow-hidden">
-                  <div className="absolute inset-0 shimmer pointer-events-none"></div>
                   <Shield className="w-20 h-20 text-purple-300 mb-4 animate-pulse relative" />
                   <h3 className="text-lg font-bold text-white mb-2 relative">No Media Uploaded</h3>
                   <p className="text-sm text-purple-200 text-center max-w-sm relative">
@@ -408,8 +399,6 @@ const VeriMedia = () => {
         {activeTab === 'about' && (
           <div className="max-w-5xl mx-auto space-y-8">
             <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-8 border border-white/20 relative overflow-hidden">
-              <div className="absolute inset-0 shimmer pointer-events-none"></div>
-
               <h2 className="text-3xl font-bold text-white mb-4 relative flex items-center gap-3">
                 <Globe className="w-8 h-8 text-blue-400" />
                 The Swiss Cheese Model
@@ -487,8 +476,6 @@ const VeriMedia = () => {
 
             {/* Why Multiple Layers */}
             <div className="backdrop-blur-xl bg-gradient-to-r from-blue-600/30 to-purple-600/30 rounded-2xl shadow-2xl p-8 border border-white/20 relative overflow-hidden">
-              <div className="absolute inset-0 shimmer pointer-events-none"></div>
-
               <h3 className="text-2xl font-bold text-white mb-4 relative flex items-center gap-3">
                 <Sparkles className="w-6 h-6 text-yellow-400" />
                 Why Multiple Layers Matter

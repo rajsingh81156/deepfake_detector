@@ -49,7 +49,7 @@ export default function HistoryPage() {
             <Shield className="w-16 h-16 text-purple-300 mb-4" />
             <h3 className="text-lg font-semibold mb-2">No History Found</h3>
             <p className="text-purple-200 max-w-sm">
-              You haven’t verified any media yet.  
+              You haven't verified any media yet.  
               Start by uploading an image or video on the home page.
             </p>
 

@@ -3,7 +3,7 @@ import VeriMedia from "./pages/VeriMedia";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import HistoryPage from "./pages/History";
-import WatermarkPanel from "./components/watermark/WatermarkPanel";
+import WatermarkPanel from "./components/watermark/WatermarkPanel"; 
 import SwissCheeseModel from "./components/about/SwissCheeseModel";
 
 export default function App() {

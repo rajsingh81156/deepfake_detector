@@ -11,12 +11,6 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const [particles] = useState(() => [...Array(20)].map(() => ({
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    animation: `float ${5 + Math.random() * 10}s ease-in-out infinite`,
-    animationDelay: `${Math.random() * 5}s`
-  })));
 
   const calculatePasswordStrength = (password) => {
     let strength = 0;
@@ -107,17 +101,6 @@ export default function Register() {
         <div className="absolute -bottom-32 left-1/2 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      {/* Floating Particles */}
-      {particles.map((particle, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-white rounded-full opacity-30"
-          style={particle}
-        />
-      ))}
-
-
-
       <div className="relative min-h-screen flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
 
@@ -136,8 +119,6 @@ export default function Register() {
           {/* Glass Morphism Card */}
           <div className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl p-8 border border-white/20 relative overflow-hidden">
 
-            {/* Shimmer Effect */}
-            <div className="absolute inset-0 shimmer pointer-events-none"></div>
             {/* Back to Home Link */}
             <button
               onClick={() => navigate("/")}
