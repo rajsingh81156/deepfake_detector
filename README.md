@@ -79,8 +79,8 @@ deepfake_detector/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/verimedia.git
-   cd verimedia
+   git clone https://github.com/rajsingh81156/deepfake_detector.git
+   cd deepfake_detector
    ```
 
 2. **Setup AI Service**
@@ -95,7 +95,7 @@ deepfake_detector/
    cd ../backend
    npm install
    # Ensure MongoDB is running
-   npm start
+   npm run dev
    ```
 
 4. **Setup Frontend**
@@ -174,16 +174,6 @@ Our verification approach uses multiple overlapping layers:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- MobileNetV2 paper and PyTorch team
-- C2PA specification and Content Authenticity Initiative
-- Open source community for amazing tools
 
 ## 📞 Contact
 
