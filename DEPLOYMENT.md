@@ -11,7 +11,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/verimedia.git
+   git clone https://github.com/rajsingh81156/verimedia.git
    cd verimedia
    ```
 
