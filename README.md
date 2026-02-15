@@ -105,6 +105,26 @@ deepfake_detector/
    npm run dev
    ```
 
+### Run with Docker (single command)
+
+Use the provided scripts to build and start all services (MongoDB, AI service, backend, frontend) with one command.
+
+On macOS / Linux:
+```bash
+./start.sh
+```
+
+On Windows (PowerShell):
+```powershell
+.\start.ps1
+```
+
+The scripts run `docker compose up --build -d` under the hood. To stop and remove containers run:
+
+```bash
+docker compose down
+```
+
 ### Environment Variables
 
 Create `.env` files in `backend/` and `frontend/`:
