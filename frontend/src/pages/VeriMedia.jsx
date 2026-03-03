@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
 import { Shield, Upload, Camera, FileCheck, AlertTriangle, CheckCircle, XCircle, Info, Lock, Fingerprint, Eye, History, Share2, Download, UserPlus, Sparkles, Zap, TrendingUp, Globe } from 'lucide-react';
 import WatermarkPanel from '../components/watermark/WatermarkPanel';
+import VerificationResult from '../components/verify/VerificationRessults';
 
 const VeriMedia = () => {
   const navigate = useNavigate();
@@ -68,6 +69,7 @@ const VeriMedia = () => {
         creator: raw.creator ?? "Unknown",
         timestamp: raw.timestamp ?? new Date().toISOString(),
         modifications: raw.modifications ?? 0,
+        preview: uploadedFile.preview,
         layers: raw.layers ?? [
           {
             name: "AI Deepfake Detection",
@@ -305,78 +307,7 @@ const VeriMedia = () => {
             {/* Results Section */}
             <div className="space-y-6">
               {verificationResult ? (
-                <>
-                  {/* Trust Score */}
-                  <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden">
-                    <h2 className="text-xl font-bold text-white mb-6 relative flex items-center gap-2">
-                      <TrendingUp className="w-6 h-6 text-green-400" />
-                      Verification Results
-                    </h2>
-                    <div className="flex justify-center mb-6">
-                      <TrustScoreMeter score={verificationResult.trustScore} />
-                    </div>
-
-                    {/* Provenance Info */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="backdrop-blur-md bg-white/10 rounded-xl p-3 border border-white/20">
-                        <p className="text-xs text-purple-200 mb-1 font-medium">Source Device</p>
-                        <p className="text-sm font-bold text-white">{verificationResult.source}</p>
-                      </div>
-                      <div className="backdrop-blur-md bg-white/10 rounded-xl p-3 border border-white/20">
-                        <p className="text-xs text-purple-200 mb-1 font-medium">Creator</p>
-                        <p className="text-sm font-bold text-white">{verificationResult.creator}</p>
-                      </div>
-                      <div className="backdrop-blur-md bg-white/10 rounded-xl p-3 border border-white/20">
-                        <p className="text-xs text-purple-200 mb-1 font-medium">Timestamp</p>
-                        <p className="text-sm font-bold text-white">
-                          {new Date(verificationResult.timestamp).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="backdrop-blur-md bg-white/10 rounded-xl p-3 border border-white/20">
-                        <p className="text-xs text-purple-200 mb-1 font-medium">Modifications</p>
-                        <p className="text-sm font-bold text-white">{verificationResult.modifications}</p>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex space-x-3">
-                      <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 backdrop-blur-md bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20 hover:scale-105 font-semibold">
-                        <Share2 className="w-4 h-4" />
-                        <span>Share</span>
-                      </button>
-                      <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 backdrop-blur-md bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20 hover:scale-105 font-semibold">
-                        <Download className="w-4 h-4" />
-                        <span>Report</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Layer Analysis */}
-                  <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-6 border border-white/20 relative overflow-hidden">
-                    <h3 className="text-lg font-bold text-white mb-4 relative flex items-center gap-2">
-                      <Eye className="w-5 h-5 text-purple-400" />
-                      Layer-by-Layer Analysis
-                    </h3>
-                    <div className="space-y-3 relative">
-                      {verificationResult.layers.map((layer, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 backdrop-blur-md bg-white/10 rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300">
-                          <div className="flex items-center space-x-3">
-                            {layer.status === 'pass' && <CheckCircle className="w-5 h-5 text-green-400" />}
-                            {layer.status === 'warning' && <AlertTriangle className="w-5 h-5 text-yellow-400" />}
-                            {layer.status === 'fail' && <XCircle className="w-5 h-5 text-red-400" />}
-                            {layer.status === 'unknown' && <Info className="w-5 h-5 text-gray-400" />}
-                            <span className="text-sm font-semibold text-white">{layer.name}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-bold text-purple-200">
-                              {layer.confidence > 0 ? `${layer.confidence}%` : 'N/A'}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
+                <VerificationResult result={verificationResult} />
               ) : (
                 <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-12 border border-white/20 flex flex-col items-center justify-center h-full relative overflow-hidden">
                   <Shield className="w-20 h-20 text-purple-300 mb-4 animate-pulse relative" />

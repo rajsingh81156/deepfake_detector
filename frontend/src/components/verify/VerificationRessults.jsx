@@ -1,6 +1,10 @@
-import { TrendingUp, Share2, Download, Eye, CheckCircle, AlertTriangle, XCircle, Info } from "lucide-react";
+import React, { useState } from 'react';
+import { Shield, TrendingUp, Share2, Download, Eye, CheckCircle, AlertTriangle, XCircle, Info } from "lucide-react";
 
 export default function VerificationResult({ result }) {
+  const [reportUrl, setReportUrl] = useState(null);
+  const [reportName, setReportName] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   if (!result) {
     return (
       <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl p-12 border border-white/20 flex flex-col items-center justify-center h-full relative overflow-hidden">
@@ -34,6 +38,117 @@ export default function VerificationResult({ result }) {
     unknown: <Info className="w-5 h-5 text-gray-400" />
   };
 
+  const loadScript = (src) => new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = (e) => reject(e);
+    document.body.appendChild(s);
+  });
+
+  const generatePdfFromNode = async (isShare = false) => {
+    if (!result) return;
+    setIsGenerating(true);
+    try {
+      // load libs
+      if (!window.html2canvas) {
+        await loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
+      }
+      if (!window.jspdf) {
+        await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+      }
+
+      const html2canvas = window.html2canvas;
+      const jsPDF = window.jspdf?.jsPDF || window.jspdf || window.jsPDF;
+
+      // build a small offscreen report node
+      const container = document.createElement('div');
+      container.style.width = '800px';
+      container.style.padding = '24px';
+      container.style.background = '#ffffff';
+      container.style.color = '#000000';
+      container.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      container.innerHTML = `
+        <h1 style="font-size:20px;margin:0 0 8px 0">Verification Report</h1>
+        <p style="margin:0 0 12px 0">Trust Score: ${result.trustScore}%</p>
+        <p style="margin:0 0 12px 0">Source: ${result.source}</p>
+        <p style="margin:0 0 12px 0">Creator: ${result.creator}</p>
+        <p style="margin:0 0 12px 0">Timestamp: ${new Date(result.timestamp).toLocaleString()}</p>
+        <p style="margin:0 0 12px 0">Modifications: ${result.modifications}</p>
+      `;
+
+      if (result.preview) {
+        const img = document.createElement('img');
+        img.src = result.preview;
+        img.style.maxWidth = '100%';
+        img.style.display = 'block';
+        img.style.margin = '12px 0';
+        container.appendChild(img);
+      }
+
+      const layersEl = document.createElement('div');
+      layersEl.innerHTML = '<h3 style="margin:12px 0 6px 0">Layer-by-layer analysis</h3>';
+      result.layers.forEach(l => {
+        const p = document.createElement('p');
+        p.style.margin = '4px 0';
+        p.textContent = `${l.name}: ${l.status} (${l.confidence ?? 'N/A'}%)`;
+        layersEl.appendChild(p);
+      });
+      container.appendChild(layersEl);
+
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      document.body.appendChild(container);
+
+      const canvas = await html2canvas(container, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgWidth = pageWidth - 40;
+      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
+
+      const fileName = 'verification-report.pdf';
+
+      // if share requested and platform supports file sharing
+      if (isShare && navigator.canShare && window.Blob) {
+        const pdfBlob = pdf.output('blob');
+        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+        try {
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'Verification Report', text: 'Verification PDF report' });
+            document.body.removeChild(container);
+            setIsGenerating(false);
+            return;
+          }
+        } catch (e) {
+          console.warn('Share failed, falling back to download', e);
+        }
+      }
+
+      // fallback: trigger download
+      const pdfUrl = pdf.output('bloburl');
+      const a = document.createElement('a');
+      a.href = pdfUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // cleanup
+      try { document.body.removeChild(container); } catch (e) { }
+      setIsGenerating(false);
+    } catch (err) {
+      console.error('PDF generation error', err);
+      alert('Failed to generate PDF report');
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <>
       {/* Trust Score */}
@@ -42,7 +157,7 @@ export default function VerificationResult({ result }) {
           <TrendingUp className="w-6 h-6 text-green-400" />
           Verification Results
         </h2>
-        
+
         {/* Trust Score Meter */}
         <div className="flex justify-center mb-6">
           <div className="flex flex-col items-center space-y-3">
@@ -96,14 +211,25 @@ export default function VerificationResult({ result }) {
 
         {/* Action Buttons */}
         <div className="flex space-x-3">
-          <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 backdrop-blur-md bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20 hover:scale-105 font-semibold">
+          <button
+            onClick={() => generatePdfFromNode(true)}
+            disabled={isGenerating}
+            className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 backdrop-blur-md bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20 hover:scale-105 font-semibold disabled:opacity-50"
+          >
             <Share2 className="w-4 h-4" />
-            <span>Share</span>
+            <span>{isGenerating ? 'Working...' : 'Share'}</span>
           </button>
-          <button className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 backdrop-blur-md bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20 hover:scale-105 font-semibold">
-            <Download className="w-4 h-4" />
-            <span>Report</span>
-          </button>
+
+          <div className="flex-1">
+            <button
+              onClick={() => generatePdfFromNode(false)}
+              disabled={isGenerating}
+              className="w-full flex items-center justify-center space-x-2 px-4 py-3 backdrop-blur-md bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20 hover:scale-105 font-semibold disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              <span>{isGenerating ? 'Generating...' : 'Report'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
