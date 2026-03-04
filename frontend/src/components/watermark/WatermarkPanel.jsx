@@ -210,19 +210,48 @@ export default function WatermarkPanel() {
                     <span className="text-white font-semibold">Watermark Successfully Added!</span>
                   </div>
                   <div className="flex gap-4">
+                   <button
+  onClick={handleDownload}
+  className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-500 hover:to-emerald-500 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    stroke="currentColor"
+    className="w-5 h-5"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+    />
+  </svg>
+
+  Download
+</button>
                     <button
-                      onClick={handleDownload}
-                      className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-500 hover:to-emerald-500 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"
-                    >
-                      <Upload className="w-5 h-5" />
-                      <span>Download</span>
-                    </button>
-                    <button
-                      onClick={handleRemoveFile}
-                      className="px-8 py-3 bg-white/10 backdrop-blur-md border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all"
-                    >
-                      Upload Another
-                    </button>
+  onClick={() => fileInputRef.current?.click()}
+  className="px-8 py-3 bg-white/10 backdrop-blur-md border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all flex items-center gap-2"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2}
+    stroke="currentColor"
+    className="w-5 h-5"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 4v16m8-8H4"
+    />
+  </svg>
+
+  Upload Another
+</button>
                   </div>
                 </div>
               )}
