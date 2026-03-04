@@ -18,18 +18,18 @@ export default function VerificationResult({ result }) {
   }
 
   const getColor = (s) => {
-    if (s >= 95) return 'text-green-600';
-    if (s >= 60) return 'text-yellow-600';
+    if (s >= 90) return 'text-green-600';
+    if (s >= 70) return 'text-yellow-600';
     return 'text-red-600';
   };
 
   const getLabel = (s) => {
-    if (s >= 95) return 'Highly Trusted';
-    if (s >= 60) return 'Moderately Trusted';
+    if (s >= 90) return 'Highly Trusted';
+    if (s >= 70) return 'Moderately Trusted';
     return 'Low Trust';
   };
 
-  const strokeColor = result.trustScore >= 95 ? '#10b981' : result.trustScore >= 60 ? '#f59e0b' : '#ef4444';
+  const strokeColor = result.trustScore >= 90 ? '#0ada94' : result.trustScore >= 70 ? '#f59e0b' : '#ef4444';
 
   const layerIcons = {
     pass: <CheckCircle className="w-5 h-5 text-green-400" />,
@@ -62,40 +62,106 @@ export default function VerificationResult({ result }) {
       const html2canvas = window.html2canvas;
       const jsPDF = window.jspdf?.jsPDF || window.jspdf || window.jsPDF;
 
-      // build a small offscreen report node
+      // build a small offscreen report node with two-column layout
       const container = document.createElement('div');
-      container.style.width = '800px';
+      container.style.width = '900px';
       container.style.padding = '24px';
       container.style.background = '#ffffff';
       container.style.color = '#000000';
       container.style.fontFamily = 'Arial, Helvetica, sans-serif';
-      container.innerHTML = `
-        <h1 style="font-size:20px;margin:0 0 8px 0">Verification Report</h1>
-        <p style="margin:0 0 12px 0">Trust Score: ${result.trustScore}%</p>
-        <p style="margin:0 0 12px 0">Source: ${result.source}</p>
-        <p style="margin:0 0 12px 0">Creator: ${result.creator}</p>
-        <p style="margin:0 0 12px 0">Timestamp: ${new Date(result.timestamp).toLocaleString()}</p>
-        <p style="margin:0 0 12px 0">Modifications: ${result.modifications}</p>
+      container.style.display = 'flex';
+      container.style.gap = '20px';
+
+      // Left column - Details
+      const leftCol = document.createElement('div');
+      leftCol.style.flex = '1';
+      leftCol.style.paddingRight = '10px';
+
+      leftCol.innerHTML = `
+        <h1 style="font-size:24px;margin:0 0 12px 0;font-weight:bold;color:#1f2937">Verification Report</h1>
+        <hr style="margin:12px 0;border:none;border-top:2px solid #e5e7eb">
+        
+        <div style="margin:16px 0">
+          <h3 style="font-size:14px;margin:0 0 6px 0;color:#6b7280;font-weight:bold;text-transform:uppercase">Trust Score</h3>
+          <p style="font-size:28px;margin:0;font-weight:bold;color:${result.trustScore >= 90 ? '#10b981' : result.trustScore >= 70 ? '#f59e0b' : '#ef4444'}">${result.trustScore}%</p>
+          <p style="font-size:12px;margin:4px 0 0 0;color:#9ca3af">${result.trustScore >= 90 ? 'Highly Trusted' : result.trustScore >= 70 ? 'Moderately Trusted' : 'Low Trust'}</p>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid #e5e7eb">
+
+        <div style="margin:16px 0">
+          <div style="margin:12px 0">
+            <p style="font-size:12px;margin:0 0 4px 0;color:#6b7280;font-weight:bold">Source Device</p>
+            <p style="font-size:14px;margin:0;color:#1f2937;font-weight:500">${result.source}</p>
+          </div>
+          <div style="margin:12px 0">
+            <p style="font-size:12px;margin:0 0 4px 0;color:#6b7280;font-weight:bold">Creator</p>
+            <p style="font-size:14px;margin:0;color:#1f2937;font-weight:500">${result.creator}</p>
+          </div>
+          <div style="margin:12px 0">
+            <p style="font-size:12px;margin:0 0 4px 0;color:#6b7280;font-weight:bold">Date & Time</p>
+            <p style="font-size:14px;margin:0;color:#1f2937;font-weight:500">${new Date(result.timestamp).toLocaleString()}</p>
+          </div>
+          <div style="margin:12px 0">
+            <p style="font-size:12px;margin:0 0 4px 0;color:#6b7280;font-weight:bold">Modifications</p>
+            <p style="font-size:14px;margin:0;color:#1f2937;font-weight:500">${result.modifications}</p>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid #e5e7eb">
+
+        <div style="margin:16px 0">
+          <h3 style="font-size:14px;margin:0 0 12px 0;color:#6b7280;font-weight:bold;text-transform:uppercase">Layer Analysis</h3>
       `;
 
+      result.layers.forEach(l => {
+        const statusColor = l.status === 'pass' ? '#10b981' : l.status === 'warning' ? '#f59e0b' : l.status === 'fail' ? '#ef4444' : '#9ca3af';
+        leftCol.innerHTML += `
+          <div style="margin:8px 0;padding:8px;background:#f3f4f6;border-left:3px solid ${statusColor};border-radius:4px">
+            <p style="font-size:13px;margin:0;color:#1f2937;font-weight:500">${l.name}</p>
+            <p style="font-size:11px;margin:2px 0 0 0;color:#6b7280">${l.status.toUpperCase()} ${l.confidence > 0 ? `(${l.confidence}%)` : '(N/A)'}</p>
+          </div>
+        `;
+      });
+
+      leftCol.innerHTML += '</div>';
+      container.appendChild(leftCol);
+
+      // Right column - Image
+      const rightCol = document.createElement('div');
+      rightCol.style.flex = '0 0 280px';
+      rightCol.style.display = 'flex';
+      rightCol.style.flexDirection = 'column';
+      rightCol.style.alignItems = 'center';
+      rightCol.style.justifyContent = 'flex-start';
+
       if (result.preview) {
+        const imgWrapper = document.createElement('div');
+        imgWrapper.style.width = '100%';
+        imgWrapper.style.border = '2px solid #e5e7eb';
+        imgWrapper.style.borderRadius = '8px';
+        imgWrapper.style.overflow = 'hidden';
+        imgWrapper.style.background = '#f9fafb';
+
         const img = document.createElement('img');
         img.src = result.preview;
-        img.style.maxWidth = '100%';
+        img.style.width = '100%';
+        img.style.height = 'auto';
         img.style.display = 'block';
-        img.style.margin = '12px 0';
-        container.appendChild(img);
+
+        imgWrapper.appendChild(img);
+        rightCol.appendChild(imgWrapper);
+
+        const label = document.createElement('p');
+        label.style.fontSize = '12px';
+        label.style.margin = '8px 0 0 0';
+        label.style.color = '#6b7280';
+        label.style.fontWeight = 'bold';
+        label.textContent = 'Uploaded Media';
+        rightCol.appendChild(label);
       }
 
-      const layersEl = document.createElement('div');
-      layersEl.innerHTML = '<h3 style="margin:12px 0 6px 0">Layer-by-layer analysis</h3>';
-      result.layers.forEach(l => {
-        const p = document.createElement('p');
-        p.style.margin = '4px 0';
-        p.textContent = `${l.name}: ${l.status} (${l.confidence ?? 'N/A'}%)`;
-        layersEl.appendChild(p);
-      });
-      container.appendChild(layersEl);
+      container.appendChild(rightCol);
 
       container.style.position = 'fixed';
       container.style.left = '-9999px';

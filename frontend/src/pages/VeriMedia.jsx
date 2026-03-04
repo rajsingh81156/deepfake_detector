@@ -102,18 +102,18 @@ const VeriMedia = () => {
 
   const TrustScoreMeter = ({ score }) => {
     const getColor = (s) => {
-      if (s >= 85) return 'text-green-600';
+      if (s >= 90) return 'text-green-600';
       if (s >= 70) return 'text-yellow-600';
       return 'text-red-600';
     };
 
     const getLabel = (s) => {
-      if (s >= 85) return 'Highly Trusted';
+      if (s >= 90) return 'Highly Trusted';
       if (s >= 70) return 'Moderately Trusted';
       return 'Low Trust';
     };
 
-    const strokeColor = score >= 85 ? '#10b981' : score >= 70 ? '#f59e0b' : '#ef4444';
+    const strokeColor = score >= 90 ? '#0ada94' : score >= 70 ? '#f59e0b' : '#ef4444';
 
     return (
       <div className="flex flex-col items-center space-y-3">
