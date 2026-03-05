@@ -255,23 +255,23 @@ export default function VerificationResult({ result }) {
 
         {/* Provenance Info */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="backdrop-blur-md bg-white/10 rounded-xl p-3 border border-white/20">
-            <p className="text-xs text-purple-200 mb-1 font-medium">Source Device</p>
-            <p className="text-sm font-bold text-white">{result.source}</p>
+          <div className="backdrop-blur-md bg-gradient-to-br from-blue-500/20 to-transparent rounded-xl p-4 border border-blue-400/50 hover:border-blue-400 transition-all">
+            <p className="text-xs text-blue-200 mb-2 font-semibold uppercase tracking-wider">Source Device</p>
+            <p className="text-base font-bold text-white break-words">{result.source || "Unknown Device"}</p>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-xl p-3 border border-white/20">
-            <p className="text-xs text-purple-200 mb-1 font-medium">Creator</p>
-            <p className="text-sm font-bold text-white">{result.creator}</p>
+          <div className="backdrop-blur-md bg-gradient-to-br from-purple-500/20 to-transparent rounded-xl p-4 border border-purple-400/50 hover:border-purple-400 transition-all">
+            <p className="text-xs text-purple-200 mb-2 font-semibold uppercase tracking-wider">Creator</p>
+            <p className="text-base font-bold text-white break-words">{result.creator || "Unknown"}</p>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-xl p-3 border border-white/20">
-            <p className="text-xs text-purple-200 mb-1 font-medium">Timestamp</p>
-            <p className="text-sm font-bold text-white">
-              {new Date(result.timestamp).toLocaleDateString()}
+          <div className="backdrop-blur-md bg-gradient-to-br from-green-500/20 to-transparent rounded-xl p-4 border border-green-400/50 hover:border-green-400 transition-all">
+            <p className="text-xs text-green-200 mb-2 font-semibold uppercase tracking-wider">Verification Date</p>
+            <p className="text-base font-bold text-white">
+              {result.timestamp ? new Date(result.timestamp).toLocaleDateString() : "N/A"}
             </p>
           </div>
-          <div className="backdrop-blur-md bg-white/10 rounded-xl p-3 border border-white/20">
-            <p className="text-xs text-purple-200 mb-1 font-medium">Modifications</p>
-            <p className="text-sm font-bold text-white">{result.modifications}</p>
+          <div className="backdrop-blur-md bg-gradient-to-br from-orange-500/20 to-transparent rounded-xl p-4 border border-orange-400/50 hover:border-orange-400 transition-all">
+            <p className="text-xs text-orange-200 mb-2 font-semibold uppercase tracking-wider">Modifications</p>
+            <p className="text-base font-bold text-white">{result.modifications || 0} detected</p>
           </div>
         </div>
 

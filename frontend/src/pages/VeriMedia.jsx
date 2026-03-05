@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Upload, Camera, FileCheck, AlertTriangle, CheckCircle, XCircle, Info, Lock, Fingerprint, Eye, History, Share2, Download, UserPlus, Sparkles, Zap, TrendingUp, Globe } from 'lucide-react';
 import WatermarkPanel from '../components/watermark/WatermarkPanel';
 import VerificationResult from '../components/verify/VerificationRessults';
-
+import exifr from 'exifr';
 const VeriMedia = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -11,6 +11,32 @@ const VeriMedia = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [verificationResult, setVerificationResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const normalizeText = (value) => {
+    if (typeof value !== "string") return "";
+    return value.trim();
+  };
+
+  const isUsefulMetadataValue = (value) => {
+    const normalized = normalizeText(value).toLowerCase();
+    if (!normalized) return false;
+    return !["unknown", "n/a", "na", "undefined", "null", "none"].includes(normalized);
+  };
+
+  const pickFirstUseful = (...values) => {
+    for (const value of values) {
+      if (isUsefulMetadataValue(value)) return normalizeText(value);
+    }
+    return "";
+  };
+
+  const getFileSourceFallback = (file) => {
+    const ext = file?.name?.split(".").pop()?.toUpperCase();
+    if (ext) return `${ext} File`;
+    if (file?.type?.startsWith("image/")) return "Image File";
+    if (file?.type?.startsWith("video/")) return "Video File";
+    return "Media File";
+  };
 
   useEffect(() => {
     const path = location.pathname;
@@ -23,13 +49,73 @@ const VeriMedia = () => {
     }
   }, [location.pathname]);
 
-  const handleFileUpload = (e) => {
+
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    let exif = {};
+    try {
+      // Parse all available metadata to support varied camera/editor tags.
+      exif = (await exifr.parse(file)) || {};
+    } catch (error) {
+      console.warn("Metadata parsing failed:", error);
+    }
+
+    const makeModel = [pickFirstUseful(exif.Make, exif.make), pickFirstUseful(exif.Model, exif.model)]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    const source = pickFirstUseful(
+      makeModel,
+      exif.DeviceModelName,
+      exif.UniqueCameraModel,
+      exif.CameraModelName,
+      exif.LensModel
+    ) || getFileSourceFallback(file);
+
+    const creator = pickFirstUseful(
+      exif.Artist,
+      exif.Creator,
+      exif.Author,
+      exif.XPAuthor,
+      exif.Copyright,
+      exif.OwnerName
+    ) || "Metadata Not Available";
+
+    const softwareHints = [
+      exif.Software,
+      exif.ProcessingSoftware,
+      exif.CreatorTool,
+      exif.HistorySoftwareAgent
+    ]
+      .map(normalizeText)
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const editKeywords = [
+      "photoshop",
+      "lightroom",
+      "snapseed",
+      "picsart",
+      "canva",
+      "gimp",
+      "after effects",
+      "premiere",
+      "capcut",
+      "final cut",
+      "davinci",
+      "pixlr"
+    ];
+
+    const modifications = editKeywords.some((keyword) => softwareHints.includes(keyword)) ? 1 : 0;
+
     setUploadedFile({
       file,
-      preview: URL.createObjectURL(file)
+      preview: URL.createObjectURL(file),
+      meta: { source, creator, modifications }  // ← store for display
     });
 
     setVerificationResult(null);
@@ -37,7 +123,7 @@ const VeriMedia = () => {
 
   const handleRemoveFile = () => {
     if (uploadedFile) {
-      URL.revokeObjectURL(uploadedFile);
+      URL.revokeObjectURL(uploadedFile.preview);
     }
     setUploadedFile(null);
     setVerificationResult(null);
@@ -51,6 +137,9 @@ const VeriMedia = () => {
 
       const formData = new FormData();
       formData.append("file", uploadedFile.file);
+      formData.append("source", uploadedFile.meta.source);
+      formData.append("creator", uploadedFile.meta.creator);
+      formData.append("modifications", uploadedFile.meta.modifications);
 
       const res = await fetch("http://localhost:5000/api/verify", {
         method: "POST",
@@ -63,12 +152,15 @@ const VeriMedia = () => {
 
       const raw = await res.json();
 
+      const hasUsefulSource = isUsefulMetadataValue(raw.source) && raw.source !== "Unknown Device";
+      const hasUsefulCreator = isUsefulMetadataValue(raw.creator) && raw.creator !== "Unknown";
+
       const formattedResult = {
         trustScore: raw.trustScore ?? Math.floor((raw.confidence ?? 0.7) * 100),
-        source: raw.source ?? "Unknown Device",
-        creator: raw.creator ?? "Unknown",
+        source: hasUsefulSource ? raw.source : (uploadedFile.meta.source || getFileSourceFallback(uploadedFile.file)),
+        creator: hasUsefulCreator ? raw.creator : (uploadedFile.meta.creator || "Metadata Not Available"),
         timestamp: raw.timestamp ?? new Date().toISOString(),
-        modifications: raw.modifications ?? 0,
+        modifications: raw.modifications ?? uploadedFile.meta.modifications ?? 0,
         preview: uploadedFile.preview,
         layers: raw.layers ?? [
           {
