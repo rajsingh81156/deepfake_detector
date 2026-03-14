@@ -34,13 +34,13 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 DETECTION_THRESHOLD = 0.5  # Default, adjust based on find_optimal_threshold results
 
 # Model file path
-MODEL_PATH = "model/best_deepfake_model.pth"
+MODEL_PATH = "models/best_model.pth"
 
 # ----------------------------
 # Load model ONCE (IMPORTANT)
 # ----------------------------
 print(f"🚀 Loading model from {MODEL_PATH}...")
-model = load_model(MODEL_PATH, model_type="auto")
+model = load_model(MODEL_PATH)
 model.eval()  # ✅ VERY IMPORTANT
 print(f"✅ Model loaded successfully on {DEVICE}")
 print(f"🎯 Detection threshold: {DETECTION_THRESHOLD}")
@@ -123,7 +123,7 @@ async def analyze(file: UploadFile = File(...)):
                 }
             ],
             "metadata": {
-                "model": "Enhanced Deepfake Detector",
+                "model": "EfficientNet-B0 based Deepfake Detector",
                 "device": str(DEVICE),
                 "threshold": DETECTION_THRESHOLD
             }
@@ -174,7 +174,7 @@ async def get_config():
         "max_file_size_mb": 10,
         "allowed_extensions": ['.jpg', '.jpeg', '.png', '.gif', '.bmp'],
         "model_info": {
-            "type": "Enhanced Deepfake Detector",
-            "architecture": "EfficientNet-B0 based"
+            "type": "EfficientNet-B0 based Deepfake Detector",
+            "architecture": "EfficientNet-B0 with optimized classifier"
         }
     }

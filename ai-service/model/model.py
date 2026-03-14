@@ -1,104 +1,120 @@
+"""
+Deepfake Detection Model Architecture
+Matches the training_model.py checkpoint architecture
+"""
+
 import torch
 import torch.nn as nn
 from torchvision import models
+from typing import Optional
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-class ImprovedDeepfakeDetector(nn.Module):
-    """Enhanced model with attention to fake features - matches training architecture"""
-    def __init__(self, num_classes: int = 2, dropout_rate: float = 0.4):
-        super(ImprovedDeepfakeDetector, self).__init__()
+
+class DeepfakeDetector(nn.Module):
+    """
+    EfficientNet-based deepfake detector optimized for low VRAM
+    Uses EfficientNet-B0 as backbone (lightweight and efficient)
+    Matches the training_model.py implementation exactly
+    """
+    def __init__(self, num_classes: int = 2, pretrained: bool = True):
+        super(DeepfakeDetector, self).__init__()
         
-        # Use EfficientNet for better feature extraction
-        self.backbone = models.efficientnet_b0(weights=None)  # weights=None since we're loading checkpoint
-        in_features = self.backbone.classifier[1].in_features
+        # Use EfficientNet-B0 (smallest, most memory efficient)
+        if pretrained:
+            self.backbone = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.DEFAULT)
+        else:
+            self.backbone = models.efficientnet_b0(weights=None)
         
-        # Enhanced classifier with more capacity - MUST match training architecture
+        # Get the number of features from the last layer
+        num_features = self.backbone.classifier[1].in_features
+        
+        # Replace classifier with custom head (NO inplace operations)
         self.backbone.classifier = nn.Sequential(
-            nn.Dropout(dropout_rate),
-            nn.Linear(in_features, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate),
-            nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate * 0.75),  # Less dropout in final layer
-            nn.Linear(256, num_classes)
+            nn.Dropout(p=0.3, inplace=False),
+            nn.Linear(num_features, 512),
+            nn.ReLU(inplace=False),
+            nn.Dropout(p=0.2, inplace=False),
+            nn.Linear(512, num_classes)
         )
-    
+        
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.backbone(x)
 
 
-# Legacy MobileNet model for backward compatibility
-class MobileNetDeepfake(nn.Module):
-    """Original MobileNet architecture - kept for backward compatibility"""
-    def __init__(self):
-        super().__init__()
-        self.model = models.mobilenet_v2(weights=None)
-        self.model.classifier = nn.Sequential(
-            nn.Dropout(0.7),
-            nn.Linear(self.model.last_channel, 128),
-            nn.ReLU(),
-            nn.Dropout(0.6),
-            nn.Linear(128, 2)
-        )
-
-    def forward(self, x):
-        return self.model(x)
-
-
-def load_model(model_path: str = "model/best_deepfake_model.pth", 
-               model_type: str = "auto"):
+def load_model(model_path: str = "./models/best_model.pth", 
+               model_type: str = "auto",  # For backward compatibility
+               device: Optional[torch.device] = None) -> DeepfakeDetector:
     """
-    Load deepfake detection model
+    Load the trained deepfake detection model
     
     Args:
-        model_path: Path to the model checkpoint
-        model_type: 'auto', 'enhanced', or 'mobilenet'
-                   'auto' will try to detect from checkpoint
+        model_path: Path to the trained model checkpoint (.pth file)
+        model_type: Legacy parameter, kept for backward compatibility (ignored)
+        device: Device to load the model on (cuda/cpu). If None, auto-detects.
     
     Returns:
         Loaded model ready for inference
-    """
-    # Load checkpoint first to inspect it
-    checkpoint = torch.load(model_path, map_location=DEVICE, weights_only=False)
-    
-    # Auto-detect model type from checkpoint if possible
-    if model_type == "auto":
-        state_dict = checkpoint.get("model_state_dict", checkpoint)
         
-        # Check if it's the enhanced model (has backbone.classifier structure with 512, 256 layers)
-        if any("backbone.classifier" in key for key in state_dict.keys()):
-            model_type = "enhanced"
-            print("✅ Detected enhanced EfficientNet model")
-        else:
-            model_type = "mobilenet"
-            print("✅ Detected legacy MobileNet model")
+    Example:
+        >>> model = load_model("./models/best_model.pth")
+        >>> model.eval()
+    """
+    if device is None:
+        device = DEVICE
     
-    # Initialize the appropriate model
-    if model_type == "enhanced":
-        model = ImprovedDeepfakeDetector(num_classes=2, dropout_rate=0.4)
-        print(f"📦 Loaded ImprovedDeepfakeDetector (EfficientNet-B0)")
-    else:
-        model = MobileNetDeepfake()
-        print(f"📦 Loaded MobileNetDeepfake (MobileNet-V2)")
+    print(f"Loading model from: {model_path}")
+    print(f"Device: {device}")
+    
+    # Load checkpoint
+    try:
+        checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+    except Exception as e:
+        print(f"❌ Error loading checkpoint: {e}")
+        raise
+    
+    # Initialize model
+    model = DeepfakeDetector(num_classes=2, pretrained=False)
     
     # Load state dict
     if "model_state_dict" in checkpoint:
+        # Checkpoint from training script (includes metadata)
         model.load_state_dict(checkpoint["model_state_dict"])
         
-        # Print additional info if available
-        if "recall_fake" in checkpoint:
-            print(f"   Fake Detection Recall: {checkpoint['recall_fake']:.4f}")
-        if "val_acc" in checkpoint:
-            print(f"   Validation Accuracy: {checkpoint['val_acc']:.2f}%")
+        # Print training info if available
+        print(f"✓ Model loaded successfully!")
         if "epoch" in checkpoint:
-            print(f"   Trained for {checkpoint['epoch']+1} epochs")
+            print(f"  Trained Epochs: {checkpoint['epoch'] + 1}")
+        if "val_acc" in checkpoint:
+            print(f"  Validation Accuracy: {checkpoint['val_acc']:.2f}%")
+        if "train_acc" in checkpoint:
+            print(f"  Training Accuracy: {checkpoint['train_acc']:.2f}%")
     else:
-        # Older checkpoint format
+        # Direct state dict (older format)
         model.load_state_dict(checkpoint)
+        print(f"✓ Model loaded successfully!")
     
-    model.to(DEVICE)
+    # Move to device
+    model.to(device)
+    model.eval()  # Set to evaluation mode
+    
+    # Count parameters
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f"  Total Parameters: {total_params:,}")
+    
     return model
+
+
+if __name__ == "__main__":
+    # Test loading
+    print("="*70)
+    print("DEEPFAKE DETECTOR MODEL LOADER - TEST")
+    print("="*70)
+    
+    try:
+        model = load_model("./models/best_model.pth")
+        print("\n✅ Model ready for inference!")
+    except FileNotFoundError:
+        print("\n⚠ Model file not found.")
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
